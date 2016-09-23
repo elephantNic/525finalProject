@@ -1,0 +1,639 @@
+echo on;
+% fianl project
+% Chen.Jie
+% problem 1a
+finalProjectP1a
+
+fracTest = 0.1;
+record = 0;
+datafile = 'wdbc.data';
+dataDim = 30;
+miu = 0.001;
+M=[];
+B=[];
+[train,test,ntrain,ntest] = wdbcData(datafile,dataDim,fracTest,record);
+
+% w is
+w
+
+w =
+
+   -1.6367
+   -0.0595
+    0.1384
+    0.0041
+    0.7843
+    0.3108
+    0.8027
+    1.1014
+    0.9297
+    0.0124
+    0.3837
+   -1.5548
+    0.3163
+    0.0517
+    0.1078
+   -0.7286
+   -0.7037
+    0.1577
+    0.0775
+   -0.1157
+    0.4467
+    0.2824
+   -0.0113
+    0.0034
+    1.6285
+    0.1688
+    2.0307
+    2.4992
+    2.3475
+    0.1075
+
+% Ygamma is
+Ygamma
+
+Ygamma =
+
+   10.1346
+
+% optimal object
+cvx_optval
+
+cvx_optval =
+
+    0.1668
+
+% number of misclassified points
+MisClassNum
+
+MisClassNum =
+
+    13
+
+% p1b
+finalProjectP1b
+
+fracTest = 0.15;
+record = 1;
+datafile = 'wdbc.data';
+dataDim = 30;
+miu = 0.001;
+M=[];
+B=[];
+[train,test,ntrain,ntest]=wdbcData(datafile,dataDim,fracTest,record);
+
+% w is
+w
+
+w =
+
+   -2.1693
+   -0.1829
+    0.2928
+    0.0007
+    0.4648
+    0.1638
+    1.4643
+    1.0445
+    0.7194
+    0.0020
+    0.4087
+   -1.2812
+   -0.5063
+    0.1208
+    0.0681
+   -0.6888
+   -0.3522
+    0.1061
+    0.0218
+   -0.1235
+    0.4120
+    0.3743
+    0.0207
+    0.0003
+    1.1552
+    0.3647
+    2.8370
+    2.1752
+    2.1578
+    0.0569
+
+% Ygamma is
+Ygamma
+
+Ygamma =
+
+   15.3402
+
+% optimal object
+cvx_optval
+
+cvx_optval =
+
+    0.1602
+
+% number of misclassified points
+MisClassNum
+
+MisClassNum =
+
+    11
+
+% p2 
+q2
+
+fracTestA = 0.1;
+reordA = 0;
+misclassA = separateQP(fracTestA,reordA,0.001);
+fprintf('For A, fracTest: %d, reord: %d, Misclassified points: %d\n',
+        fracTestA, reordA, misclassA);
+For A, fracTest: 1.000000e-01, reord: 0, Misclassified points: 2
+clear
+
+%2(b)
+fracTestB = 0.15;
+reordB = 0;
+misclassB = separateQP(fracTestB,reordB,0.001);
+fprintf('For B, fracTest: %d, reord: %d, Misclassified points: %d\n',
+        fracTestB, reordB, misclassB);
+For B, fracTest: 1.500000e-01, reord: 0, Misclassified points: 2
+clear
+%2(c)
+fracTestC = 0.2;
+reordC = 1;
+misclassC = separateQP(fracTestC,reordC,0.001);
+fprintf('For C, fracTest: %d, reord: %d, Misclassified points: %d\n',
+        fracTestC, reordC, misclassC);
+For C, fracTest: 2.000000e-01, reord: 1, Misclassified points: 5
+clear
+
+%2(d)
+fracTestD = 0.05;
+reordD = 1;
+misclassD = separateQP(fracTestD,reordD,0.001);
+fprintf('For D, fracTest: %d, reord: %d, Misclassified points: %d\n',
+        fracTestD, reordD, misclassD);
+For D, fracTest: 5.000000e-02, reord: 1, Misclassified points: 0
+% p3 result
+type soln.txt
+
+features  1  2: misclass  58
+features  1  3: misclass  51
+features  1  6: misclass  50
+features  1  7: misclass  47
+features  1 21: misclass  35
+features  1 23: misclass  32
+features  2 23: misclass  30
+features 14 28: misclass  27
+% since the real useful attritube starts from column 2, so in the data, 
+        it should be 15, 29 attributes
+% end of solns
+
+% ---code---
+type finalProjectP1a.m
+
+%Problem 1(a)
+fracTest = 0.1;
+record = 0;
+datafile = 'wdbc.data';
+dataDim = 30;
+miu = 0.001;
+M=[];
+B=[];
+[train,test,ntrain,ntest] = wdbcData(datafile,dataDim,fracTest,record);
+
+for i = 1:ntrain
+    if(train(i,1) == 0)
+        B = [B;train(i,2:end)];
+    
+    elseif(train(i,1) == 1)
+        M = [M;train(i,2:end)];
+    end
+end
+
+m = size(M,1);
+k = size(B,1);
+em = ones(m,1);
+ek = ones(k,1);
+
+
+cvx_begin quiet
+    variable w(30)
+    variable Ygamma(1)
+    variable y(m)
+    variable z(k)
+    minimize ((1/m)*em'*y + (1/k)*ek'*z + (miu/2)*w'*w)
+    subject to
+    M*w - em* Ygamma +y >= em
+    -B*w + ek* Ygamma + z >= ek
+    y >= 0
+    z >= 0
+cvx_end
+
+MisClassNum = 0;
+a = M*w - em *Ygamma;
+b = B*w - ek *Ygamma;
+for i = 1:m
+    if(a(i)<=0)
+        MisClassNum = MisClassNum+1;
+    end
+end
+
+for i = 1: k
+    if(b(i)>0)
+        MisClassNum = MisClassNum+1;
+    end
+end
+% w is
+w
+% Ygamma is
+Ygamma
+% optimal object
+cvx_optval
+% number of misclassified points
+MisClassNum
+% end for p1(a)
+% 1b
+type finalProjectP1b.m
+
+
+%Problem 1(b)
+fracTest = 0.15;
+record = 1;
+datafile = 'wdbc.data';
+dataDim = 30;
+miu = 0.001;
+M=[];
+B=[];
+[train,test,ntrain,ntest]=wdbcData(datafile,dataDim,fracTest,record);
+
+for i = 1:ntrain
+    if(train(i,1) == 0)
+        B = [B;train(i,2:end)];
+    
+    elseif(train(i,1) == 1)
+        M = [M;train(i,2:end)];
+    end
+end
+
+m = size(M,1);
+k = size(B,1);
+em = ones(m,1);
+ek = ones(k,1);
+
+
+cvx_begin quiet
+    variable w(30)
+    variable Ygamma(1)
+    variable y(m)
+    variable z(k)
+    minimize ((1/m)*em'*y + (1/k)*ek'*z + (miu/2)*w'*w)
+    subject to
+    M*w - em* Ygamma +y >= em
+    -B*w + ek* Ygamma + z >= ek
+    y >= 0
+    z >= 0
+cvx_end
+
+MisClassNum = 0;
+a = M*w - em *Ygamma;
+b = B*w - ek *Ygamma;
+for i = 1:m
+    if(a(i)<=0)
+        MisClassNum = MisClassNum+1;
+    end
+end
+
+for i = 1: k
+    if(b(i)>0)
+        MisClassNum = MisClassNum+1;
+    end
+end
+% w is
+w
+% Ygamma is
+Ygamma
+% optimal object
+cvx_optval
+% number of misclassified points
+MisClassNum
+% end for p1(b)
+
+%p2
+type q2.m
+
+%2(a)
+fracTestA = 0.1;
+reordA = 0;
+misclassA = separateQP(fracTestA,reordA,0.001);
+fprintf('For A, fracTest: %d, reord: %d, Misclassified points: %d\n',
+        fracTestA, reordA, misclassA);
+clear
+
+%2(b)
+fracTestB = 0.15;
+reordB = 0;
+misclassB = separateQP(fracTestB,reordB,0.001);
+fprintf('For B, fracTest: %d, reord: %d, Misclassified points: %d\n',
+        fracTestB, reordB, misclassB);
+clear
+%2(c)
+fracTestC = 0.2;
+reordC = 1;
+misclassC = separateQP(fracTestC,reordC,0.001);
+fprintf('For C, fracTest: %d, reord: %d, Misclassified points: %d\n',
+        fracTestC, reordC, misclassC);
+clear
+
+%2(d)
+fracTestD = 0.05;
+reordD = 1;
+misclassD = separateQP(fracTestD,reordD,0.001);
+fprintf('For D, fracTest: %d, reord: %d, Misclassified points: %d\n',
+        fracTestD, reordD, misclassD);
+type separateQP.m
+
+function misclass = separateQP(fracTest1, reord1,mu)
+fracTest = fracTest1;
+reord = reord1;
+[train,test,ntrain,ntest]=wdbcData('wdbc.data',30,fracTest,reord);
+
+B = [];
+M = [];
+for i = 1:ntrain
+    if(train(i,1) == 0)
+        B = [B;train(i,2:end)];
+    
+    elseif(train(i,1) == 1)
+        M = [M;train(i,2:end)];
+    end
+end
+
+m = size(M,1);
+k = size(B,1);
+em = ones(m,1);
+ek = ones(k,1);
+miu = mu;
+
+cvx_begin quiet
+    variable w(30)
+    variable Ygamma(1)
+    variable y(m)
+    variable z(k)
+    minimize ((1/m)*em'*y + (1/k)*ek'*z + (miu/2)*w'*w)
+    subject to
+    M*w - em* Ygamma +y >= em
+    -B*w + ek* Ygamma + z >= ek
+    y >= 0
+    z >= 0
+cvx_end
+
+BT = [];
+MT = [];
+for i=1:ntest
+    if(test(i,1)==0)
+        BT = [BT;test(i,2:end)];
+    end
+    if(test(i,1)==1)
+        MT = [MT;test(i,2:end)];
+    end
+end
+
+MisClassNum = 0;
+m = size(MT,1);
+k = size(BT,1);
+em = ones(m,1);
+ek = ones(k,1);
+
+a = MT*w - em *Ygamma;
+b = BT*w - ek *Ygamma;
+
+for i = 1:m
+    if(a(i)<=0)
+        MisClassNum = MisClassNum+1;
+    end
+end
+
+for i = 1: k
+    if(b(i)>0)
+        MisClassNum = MisClassNum+1;
+    end
+end
+misclass = MisClassNum;
+
+% separateQP
+
+type separateQP.m
+function misclass = separateQP(fracTest1, reord1,mu)
+fracTest = fracTest1;
+reord = reord1;
+[train,test,ntrain,ntest]=wdbcData('wdbc.data',30,fracTest,reord);
+
+B = [];
+M = [];
+for i = 1:ntrain
+    if(train(i,1) == 0)
+        B = [B;train(i,2:end)];
+    
+    elseif(train(i,1) == 1)
+        M = [M;train(i,2:end)];
+    end
+end
+
+m = size(M,1);
+k = size(B,1);
+em = ones(m,1);
+ek = ones(k,1);
+miu = mu;
+
+cvx_begin quiet
+    variable w(30)
+    variable Ygamma(1)
+    variable y(m)
+    variable z(k)
+    minimize ((1/m)*em'*y + (1/k)*ek'*z + (miu/2)*w'*w)
+    subject to
+    M*w - em* Ygamma +y >= em
+    -B*w + ek* Ygamma + z >= ek
+    y >= 0
+    z >= 0
+cvx_end
+
+BT = [];
+MT = [];
+for i=1:ntest
+    if(test(i,1)==0)
+        BT = [BT;test(i,2:end)];
+    end
+    if(test(i,1)==1)
+        MT = [MT;test(i,2:end)];
+    end
+end
+
+MisClassNum = 0;
+m = size(MT,1);
+k = size(BT,1);
+em = ones(m,1);
+ek = ones(k,1);
+
+a = MT*w - em *Ygamma;
+b = BT*w - ek *Ygamma;
+
+for i = 1:m
+    if(a(i)<=0)
+        MisClassNum = MisClassNum+1;
+    end
+end
+
+for i = 1: k
+    if(b(i)>0)
+        MisClassNum = MisClassNum+1;
+    end
+end
+misclass = MisClassNum;
+% p3
+type q3.m
+
+% q3
+fracTest = 0.12;
+reord = 0;
+fewMis = 0;
+fewOpt = 0;
+miu = 0.0008;
+[train,test,ntrain,ntest]=wdbcData('wdbc.data',30,fracTest,reord);
+fh = fopen('soln.txt','w');
+for l = 1:30
+    for j = l+1:30
+        M=[];
+        B=[];
+        for i =1:ntrain
+            if(train(i,1) == 0)
+                B=[B;train(i,[l+1 j+1])];
+            elseif(train(i,1) == 1)
+                M = [M;train(i,[l+1 j+1])];
+            end
+        end
+        m = size(M,1);
+        k = size(B,1);
+        em = ones(m,1);
+        ek = ones(k,1);
+        cvx_begin quiet
+            variable w(2)
+            variable Y(1)
+            variable y(m)
+            variable z(k)
+            minimize((1/m)*em'*y + (1/k)*ek'*z + (miu/2)*w'*w)
+            subject to
+            M*w - em*Y +y >= em
+            -B*w + ek*Y+z >= ek
+            y >= 0
+            z >= 0
+        cvx_end
+         
+         MisClassNum = 0;
+         a = M*w-em*Y;
+         b = B*w-ek*Y;
+         for i = 1:m
+             if(a(i) <= 0)
+                 MisClassNum = MisClassNum+1;
+             end
+         end
+         for i = 1:k
+             if(b(i) > 0)
+                 MisClassNum = MisClassNum+1;
+             end
+         end
+         if(l==1 && j==2)
+             fewMis = MisClassNum;
+             fprintf(fh,'features %2d %2d: misclass %3d\n',l,j,fewMis);
+             fewOpt = cvx_optval;
+         else
+             if(MisClassNum < fewMis)
+                 fewMis = MisClassNum;
+                 fprintf(fh,'features %2d %2d: misclass %3d\n',l,j,fewMis);
+                 fewOpt = cvx_optval;
+             elseif(MisClassNum == fewMis)
+                 if(cvx_optval < fewMis)
+                     fewMis = MisClassNum;
+                     fprintf(fh,'features %2d %2d: misclass %3d\n',l,j,fewMis);
+                     fewOpt = cvx_optval;
+                 end
+             end
+         end
+    end
+end
+
+        
+%p4
+type q4.m
+
+fracTest = 0.12;
+reord = 0;
+miu = 0.0008;
+[train,test,ntrain,ntest]=wdbcData('wdbc.data',30,fracTest,reord);
+B = [];
+M = [];
+for i = 1:ntrain
+    if(train(i,1)==0)
+        B = [B;train(i,[15 29])];
+    elseif(train(i,1)==1)
+        M = [M;train(i, [15 29])];
+    end
+end
+m = size(M,1);
+k = size(B,1);
+em = ones(m,1);
+ek = ones(k,1);
+cvx_begin quiet
+    variable w(2)
+    variable Y(1)
+    variable y(m)
+    variable z(k)
+    minimize((1/m)*em'*y + (1/k)*ek'*z + (miu/2)*w'*w)
+    subject to
+    M*w - em*Y +y >= em
+    -B*w + ek*Y+z >= ek
+    y >= 0
+    z >= 0
+cvx_end
+
+BT = [];
+MT = [];
+for i = 1:ntest
+    if(test(i,1)==0)
+        BT = [BT;test(i,[15 29])];
+    elseif(test(i,1)==1)
+        MT = [MT;test(i,[15 29])];
+    end
+end
+
+
+MisClassNum = 0;
+m = size(MT,1);
+k = size(BT,1);
+em = ones(m,1);
+ek = ones(k,1);
+
+a = MT*w - em *Y;
+b = BT*w - ek *Y;
+for i = 1:m
+    if(a(i) <= 0)
+        MisClassNum = MisClassNum+1
+    end
+end
+for i = 1:k
+    if(b(i)>0)
+        MisClassNum = MisClassNum+1
+    end
+end
+
+MisClassNum
+scatter(BT(:,1),BT(:,2),'o');
+hold on;
+scatter(MT(:,1),MT(:,2),'x');
+x1 = 1:200;
+x2 = 1/w(2)*Y-w(1)/w(2)*x1;
+plot(x1,x2);
+% end of code
+% end of project
+diary off
